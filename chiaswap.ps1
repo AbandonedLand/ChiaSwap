@@ -537,8 +537,12 @@ Function Build-QuotesforCurrentXCH{
 function Start-TradingBot{
     param(
         [Parameter(Mandatory=$true)]
-        $Config
+        $Config,
+        [int16]$QuoteDepth
     )
+    if(-not $QuoteDepth){
+        $QuoteDepth = 10
+    } 
     $xch_wallet_id = 1   # default wallet id for xch
     $usd_wallet_id = Convert-AssetIdToWalletId -AssetId $Config.StableCoinAssetId   # my wallet id for wUSDC.b
     $decimals = 1000000000000
@@ -550,7 +554,7 @@ function Start-TradingBot{
     while($true){
         $CurrentXch = Get-XCHBallance
         Write-Host "Current XCH Ballance: $CurrentXch"
-        $Quotes = Build-QuotesforCurrentXCH -CurrentXch $CurrentXch -Table $Table
+        $Quotes = Build-QuotesforCurrentXCH -CurrentXch $CurrentXch -Table $Table -QuoteDepth $QuoteDepth
         New-OffersFromQuotes -Quotes $Quotes
         Start-Sleep 60
     }
@@ -883,10 +887,10 @@ function New-OffersFromQuotes{
 #$quotes = Build-QuotesforCurrentXCH -current_xch $current_xch -table $table
 
 
-#new-ChiaSwapConfig -UpperPrice 14.15 -LowerPrice 12.621 -StartingPrice 13.15 -FeePercent 0.006 -StableCoin wUSDC.b -Steps 157 -Force -StartingStableCoin 743.536
-#$config = Get-ChiaSwapConfig
-#Get-LiquidityRequirements -InputType StableCoin -Amount 743.536 -Config $Config
-#$table = Build-TickTable -Config $Config
-#$quotes = Build-QuotesforCurrentXCH -CurrentXch 10000000000000 -Table $table -QuoteDepth 20
-#$quotes | ft
-#Get-LiquidityRequirements -InputType StableCoin -Amount 743.536 -Config $Config
+new-ChiaSwapConfig -UpperPrice 14.15 -LowerPrice 12.621 -StartingPrice 13.15 -FeePercent 0.006 -StableCoin wUSDC.b -Steps 157 -Force -StartingStableCoin 743.536
+$config = Get-ChiaSwapConfig
+Get-LiquidityRequirements -InputType StableCoin -Amount 743.536 -Config $Config
+$table = Build-TickTable -Config $Config
+$quotes = Build-QuotesforCurrentXCH -CurrentXch (Get-XCHBallance) -Table $table -QuoteDepth 20
+$quotes | ft
+Get-LiquidityRequirements -InputType StableCoin -Amount 743.536 -Config $Config
