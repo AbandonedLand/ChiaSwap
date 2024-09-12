@@ -1,3 +1,6 @@
+
+
+
 function New-ChiaSwapConfig {
     <#
     .SYNOPSIS
@@ -433,7 +436,7 @@ Function Build-TickTable{
         [Parameter(Mandatory=$true)]
         $Config
     )
-
+    $Decimals = 1000000000000
     $Liquidity = $Config.Liquidity
 
     $l2 = $Liquidity.l2
@@ -482,11 +485,15 @@ Function Build-QuotesforCurrentXCH{
         [Parameter(Mandatory=$true)]
         $CurrentXch,
         [Parameter(Mandatory=$true)]
-        $Table
+        $Table,
+        [int16]$QuoteDepth
     )
-
-    $sell_table = $Table | Where-Object {$_.start -lt $CurrentXch} | Sort-Object {$_.start} -Descending | Select-Object -First 10
-    $buy_table = $Table | Where-Object {$_.start -gt $CurrentXch} | Sort-Object {$_.loop} | Select-Object -First 10
+    if(-not $QuoteDepth){
+        $QuoteDepth = 10
+    } 
+    $Decimals = 1000000000000
+    $sell_table = $Table | Where-Object {$_.start -lt $CurrentXch} | Sort-Object {$_.start} -Descending | Select-Object -First $QuoteDepth
+    $buy_table = $Table | Where-Object {$_.start -gt $CurrentXch} | Sort-Object {$_.loop} | Select-Object -First $QuoteDepth
 
     
     $quotes = @()
@@ -876,6 +883,10 @@ function New-OffersFromQuotes{
 #$quotes = Build-QuotesforCurrentXCH -current_xch $current_xch -table $table
 
 
-
-
-
+#new-ChiaSwapConfig -UpperPrice 14.15 -LowerPrice 12.621 -StartingPrice 13.15 -FeePercent 0.006 -StableCoin wUSDC.b -Steps 157 -Force -StartingStableCoin 743.536
+#$config = Get-ChiaSwapConfig
+#Get-LiquidityRequirements -InputType StableCoin -Amount 743.536 -Config $Config
+#$table = Build-TickTable -Config $Config
+#$quotes = Build-QuotesforCurrentXCH -CurrentXch 10000000000000 -Table $table -QuoteDepth 20
+#$quotes | ft
+#Get-LiquidityRequirements -InputType StableCoin -Amount 743.536 -Config $Config
