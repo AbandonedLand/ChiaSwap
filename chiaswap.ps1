@@ -887,10 +887,10 @@ function New-OffersFromQuotes{
 #$quotes = Build-QuotesforCurrentXCH -current_xch $current_xch -table $table
 
 
-new-ChiaSwapConfig -UpperPrice 14.15 -LowerPrice 12.621 -StartingPrice 13.15 -FeePercent 0.006 -StableCoin wUSDC.b -Steps 157 -Force -StartingStableCoin 743.536
-$config = Get-ChiaSwapConfig
-Get-LiquidityRequirements -InputType StableCoin -Amount 743.536 -Config $Config
-$table = Build-TickTable -Config $Config
-$quotes = Build-QuotesforCurrentXCH -CurrentXch (Get-XCHBallance) -Table $table -QuoteDepth 20
-$quotes | ft
-Get-LiquidityRequirements -InputType StableCoin -Amount 743.536 -Config $Config
+#new-ChiaSwapConfig -UpperPrice 14.15 -LowerPrice 12.621 -StartingPrice 13.15 -FeePercent 0.006 -StableCoin wUSDC.b -Steps 157 -Force -StartingStableCoin 743.536
+#$config = Get-ChiaSwapConfig
+#Get-LiquidityRequirements -InputType StableCoin -Amount 743.536 -Config $Config
+#$table = Build-TickTable -Config $Config
+#$quotes = Build-QuotesforCurrentXCH -CurrentXch (Get-XCHBallance) -Table $table -QuoteDepth 20
+#$quotes | ft
+#Get-LiquidityRequirements -InputType StableCoin -Amount 743.536 -Config $Config
