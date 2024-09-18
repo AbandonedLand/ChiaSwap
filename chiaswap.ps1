@@ -25,16 +25,16 @@ function New-ChiaSwapConfig {
         For example: ./config.json
     .PARAMETER Force
         Overwrites the config file.
-    .PARAMETER StableCoin
-        Stable coin used in trading between XCH / Stablecoin
+    .PARAMETER CatCoin
+        Stable coin used in trading between XCH / CatCoin
     .PARAMETER Steps
         Default 100
         The number of trades required to go from the lower liquidity price to upper liquidity price.  
         Steps are used to create a table of offers/request offers.
     .PARAMETER StartingXch
         The Starting XCH used in the calculations
-    .PARAMETER StartingStableCoin
-        Starting amount of stablecoins.
+    .PARAMETER StartingCatCoin
+        Starting amount of CatCoins.
     #>
     param (
         [Parameter(Mandatory=$true)]
@@ -46,14 +46,14 @@ function New-ChiaSwapConfig {
         [Parameter(Mandatory=$true)]
         $FeePercent,
         [Parameter(Mandatory=$true)]
-        [ValidateSet("wUSDC","wUSDC.b","wUSDT")]
-        $StableCoin,
+        [ValidateSet("wUSDC","wUSDC.b","wUSDT","SBX","DBX","HOA","wmilliETH","wmilliETH.b")]
+        $CatCoin,
         [parameter(Mandatory=$true,
             ParameterSetName="XCH")]
         $StartingXch,
         [parameter(Mandatory=$true,
             ParameterSetName="Stable")]
-        $StartingStableCoin,
+        $StartingCatCoin,
         $Steps,
         $FileName,
         [switch]$Force
@@ -69,11 +69,15 @@ function New-ChiaSwapConfig {
         $FileName = "config.json"
     }
 
-    # Set the stable coin asset id based on $StableCoin input
-    $StableCoinAssetId = switch ($StableCoin){
+    # Set the stable coin asset id based on $CatCoin input
+    $CatCoinAssetId = switch ($CatCoin){
         "wUSDC" {"bbb51b246fbec1da1305be31dcf17151ccd0b8231a1ec306d7ce9f5b8c742b9e"}
         "wUSDC.b" {"fa4a180ac326e67ea289b869e3448256f6af05721f7cf934cb9901baa6b7a99d"}
         "wUSDT" {"634f9f0de1a6c39a2189948b8e61b6852fbf774f73b0e36e143e841c49a0798c"}
+        "SBX" {"a628c1c2c6fcb74d53746157e438e108eab5c0bb3e5c80ff9b1910b3e4832913"}
+        "wmilliETH" {"4cb15a8ecc85068fb1f98c09a5e489d1ad61b2af79690ce00f9fc4803c8b597f"}
+        "wmilliETH.b" {"f322a205c034fe28681829fa5a2e483ac421f0952eb1292945c8db06e0a471a6"}
+        "DBX" {"db1a9020d48d9d4ad22631b66ab4b9ebd3637ef7758ad38881348c5d24c38f20"}
     }
     
 
@@ -88,15 +92,15 @@ function New-ChiaSwapConfig {
                 StartingPrice = $StartingPrice
                 FeePercent = $FeePercent
                 Steps = $Steps
-                StableCoinAssetId = $StableCoinAssetId
+                CatCoinAssetId = $CatCoinAssetId
                 
             } 
             if($StartingXch -gt 0){
                 $Config.Add("StartingXch",$StartingXch)
                 
             }
-            if($StartingStableCoin -gt 0){
-                $Config.Add("StartingStableCoin",$StartingStableCoin)
+            if($StartingCatCoin -gt 0){
+                $Config.Add("StartingCatCoin",$StartingCatCoin)
                 
             }
             
@@ -224,9 +228,9 @@ function Get-ChiaSwapConfig {
         Write-Error "File not found."
     }
     
-    if($FileData.LowerPrice -and $FileData.UpperPrice -and $FileData.StableCoinAssetId -and $FileData.StartingPrice -and $FileData.Steps -and $FileData.FeePercent){
-        if($FileData.StartingStableCoin -gt 0){
-            $FileData | Add-Member -MemberType NoteProperty -Name 'Liquidity' -Value (Get-LiquidityFromStableCoin -StableCoinAmount $FileData.StartingStableCoin -Config $FileData)
+    if($FileData.LowerPrice -and $FileData.UpperPrice -and $FileData.CatCoinAssetId -and $FileData.StartingPrice -and $FileData.Steps -and $FileData.FeePercent){
+        if($FileData.StartingCatCoin -gt 0){
+            $FileData | Add-Member -MemberType NoteProperty -Name 'Liquidity' -Value (Get-LiquidityFromCatCoin -CatCoinAmount $FileData.StartingCatCoin -Config $FileData)
         }
         if($FileData.StartingXch -gt 0){
             $FileData | Add-Member -MemberType NoteProperty -Name 'Liquidity' -Value (Get-LiquidityFromXch -XchAmount $FileData.StartingXch -Config $FileData)
@@ -307,7 +311,7 @@ function ConvertFrom-Xr{
 function Get-LiquidityRequirements{
     param(
         [Parameter(Mandatory=$true)]
-        [ValidateSet("StableCoin","XCH")]
+        [ValidateSet("CatCoin","XCH")]
         $InputType,
         [Parameter(Mandatory=$true)]
         $Amount,
@@ -315,8 +319,8 @@ function Get-LiquidityRequirements{
         $Config
     )
 
-    if($InputType -eq "StableCoin"){
-        $Data = Get-LiquidityFromStableCoin -StableCoinAmount $Amount -Config $Config
+    if($InputType -eq "CatCoin"){
+        $Data = Get-LiquidityFromCatCoin -CatCoinAmount $Amount -Config $Config
     }
     if($InputType -eq "XCH"){
         $Data = Get-LiquidityFromXch -XchAmount $Amount -Config $Config
@@ -324,11 +328,11 @@ function Get-LiquidityRequirements{
 
     [PSCustomObject]@{
         XchRequired = (ConvertFrom-Xr -Amount $Data.Xr)   
-        StableCoinRequired = [Decimal]::round((ConvertFrom-Yr -Amount $Data.Yr),3)
+        CatCoinRequired = [Decimal]::round((ConvertFrom-Yr -Amount $Data.Yr),3)
     } | Format-List
 
 }
-function Get-LiquidityFromStableCoin{
+function Get-LiquidityFromCatCoin{
     <#
     .SYNOPSIS
         Uses the UniSwapV3 formula to figure out what the liquidiy is for the giving config by giving the starting Stable Coin amount in USD.
@@ -338,13 +342,13 @@ function Get-LiquidityFromStableCoin{
     #>
     param(
         [Parameter(Mandatory=$true)]
-        $StableCoinAmount,
+        $CatCoinAmount,
         [Parameter(Mandatory=$true)]
         $Config
     )
 
     
-    $yr = [Decimal](ConvertTo-Yr -Amount $StableCoinAmount)
+    $yr = [Decimal](ConvertTo-Yr -Amount $CatCoinAmount)
     $p = $Config.StartingPrice
     $pb = $Config.UpperPrice
     $pa = $Config.LowerPrice
@@ -544,11 +548,11 @@ function Start-TradingBot{
         $QuoteDepth = 10
     } 
     $xch_wallet_id = 1   # default wallet id for xch
-    $usd_wallet_id = Convert-AssetIdToWalletId -AssetId $Config.StableCoinAssetId   # my wallet id for wUSDC.b
+    $usd_wallet_id = Convert-AssetIdToWalletId -AssetId $Config.CatCoinAssetId   # my wallet id for wUSDC.b
     $decimals = 1000000000000
-    #asset id for stablecoin used - fa4a180ac326e67ea289b869e3448256f6af05721f7cf934cb9901baa6b7a99d is for wUSDC.b
+    #asset id for CatCoin used - fa4a180ac326e67ea289b869e3448256f6af05721f7cf934cb9901baa6b7a99d is for wUSDC.b
     $cat_name = 'wusdcb'
-    $cat_tail = $Config.StableCoinAssetId
+    $cat_tail = $Config.CatCoinAssetId
     
     $Table = Build-TickTable -Config $Config
     while($true){
@@ -576,7 +580,7 @@ $starting_usd = 180.828
 $xch_wallet_id = 1   # default wallet id for xch
 $usd_wallet_id = 4   # my wallet id for wUSDC.b
 
-#asset id for stablecoin used - fa4a180ac326e67ea289b869e3448256f6af05721f7cf934cb9901baa6b7a99d is for wUSDC.b
+#asset id for CatCoin used - fa4a180ac326e67ea289b869e3448256f6af05721f7cf934cb9901baa6b7a99d is for wUSDC.b
 $cat_name = 'wusdcb'
 $cat_tail = 'fa4a180ac326e67ea289b869e3448256f6af05721f7cf934cb9901baa6b7a99d'
 
@@ -887,10 +891,10 @@ function New-OffersFromQuotes{
 #$quotes = Build-QuotesforCurrentXCH -current_xch $current_xch -table $table
 
 
-#new-ChiaSwapConfig -UpperPrice 14.15 -LowerPrice 12.621 -StartingPrice 13.15 -FeePercent 0.006 -StableCoin wUSDC.b -Steps 157 -Force -StartingStableCoin 743.536
+new-ChiaSwapConfig -UpperPrice 14.15 -LowerPrice 12.621 -StartingPrice 13.15 -FeePercent 0.006 -CatCoin wUSDC.b -Steps 157 -Force -StartingCatCoin 743.536
 #$config = Get-ChiaSwapConfig
-#Get-LiquidityRequirements -InputType StableCoin -Amount 743.536 -Config $Config
+#Get-LiquidityRequirements -InputType CatCoin -Amount 743.536 -Config $Config
 #$table = Build-TickTable -Config $Config
 #$quotes = Build-QuotesforCurrentXCH -CurrentXch (Get-XCHBallance) -Table $table -QuoteDepth 20
 #$quotes | ft
-#Get-LiquidityRequirements -InputType StableCoin -Amount 743.536 -Config $Config
+#Get-LiquidityRequirements -InputType CatCoin -Amount 743.536 -Config $Config
