@@ -93,6 +93,7 @@ function New-ChiaSwapConfig {
                 FeePercent = $FeePercent
                 Steps = $Steps
                 CatCoinAssetId = $CatCoinAssetId
+                CatCoin = $CatCoin
                 
             } 
             if($StartingXch -gt 0){
@@ -310,25 +311,26 @@ function ConvertFrom-Xr{
 
 function Get-LiquidityRequirements{
     param(
-        [Parameter(Mandatory=$true)]
-        [ValidateSet("CatCoin","XCH")]
-        $InputType,
-        [Parameter(Mandatory=$true)]
-        $Amount,
+        
         [Parameter(Mandatory=$true)]
         $Config
     )
 
-    if($InputType -eq "CatCoin"){
-        $Data = Get-LiquidityFromCatCoin -CatCoinAmount $Amount -Config $Config
+
+
+    if($Config.StartingCatCoin){
+        $Data = Get-LiquidityFromCatCoin -CatCoinAmount $Config.StartingCatCoin -Config $Config
     }
-    if($InputType -eq "XCH"){
-        $Data = Get-LiquidityFromXch -XchAmount $Amount -Config $Config
+    if($Config.StartingXch){
+        $Data = Get-LiquidityFromXch -XchAmount $Config.StartingXch -Config $Config
     }
 
+
+
     [PSCustomObject]@{
-        XchRequired = (ConvertFrom-Xr -Amount $Data.Xr)   
+        CatToken = $Config.CatCoin
         CatCoinRequired = [Decimal]::round((ConvertFrom-Yr -Amount $Data.Yr),3)
+        XchRequired = (ConvertFrom-Xr -Amount $Data.Xr)   
     } | Format-List
 
 }
@@ -563,31 +565,6 @@ function Start-TradingBot{
         Start-Sleep 60
     }
 }
-
-# Editable Area
-# ---------------------------------
-
-$upper_price = 15.5
-$lower_price = 12.5
-$current_price = 13.549
-$fee_percent = 0.007
-
-
-$starting_xch = 21984425723630
-$starting_usd = 180.828
-
-# Wallet ID section
-$xch_wallet_id = 1   # default wallet id for xch
-$usd_wallet_id = 4   # my wallet id for wUSDC.b
-
-#asset id for CatCoin used - fa4a180ac326e67ea289b869e3448256f6af05721f7cf934cb9901baa6b7a99d is for wUSDC.b
-$cat_name = 'wusdcb'
-$cat_tail = 'fa4a180ac326e67ea289b869e3448256f6af05721f7cf934cb9901baa6b7a99d'
-
-
-
-
-
 
 
 
