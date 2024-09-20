@@ -8,6 +8,13 @@ Concentrated liquidity can be provided between two prices.  The upper and lower 
 
 # How to use
 
+## Step 0 - Initialize
+Get a copy of the chiaswap.ps1 and then dot load it.  This will give access to all the functions.  Be sure to prepend the beginning (.) .
+```PowerShell
+. ./chiaswap.ps1
+```
+
+
 ## Step 1 - Create Config
 This config will set an upper price per xch at $15.50, a Lower price per xch of 12.50 and the starting price of 14.10.   
 This will use the Base Wrapped USDC coin and we are starting with 100 XCH as liquidity.
