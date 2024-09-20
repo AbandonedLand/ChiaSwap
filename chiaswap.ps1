@@ -56,9 +56,11 @@ function New-ChiaSwapConfig {
         $StartingCatCoin,
         $Steps,
         $FileName,
+        
         [switch]$Force
     )
 
+    
 
     if(-not $Steps){
         $Steps = 100
@@ -103,6 +105,11 @@ function New-ChiaSwapConfig {
             if($StartingCatCoin -gt 0){
                 $Config.Add("StartingCatCoin",$StartingCatCoin)
                 
+            }
+            if($UseSplash.IsPresent){
+                $Config.Add("PostTo","Splash")
+            } else {
+                $Config.Add("PostTo","Dexie")
             }
             
             $Config | ConvertTo-Json -Depth 20 | Out-File -FilePath $FileName
@@ -149,6 +156,8 @@ function Convert-AssetIdToWalletId{
         Write-Error "AssetID $AssetID was not found.  Please add it with the Import-ChiaAssetId function to add the asset to your chia wallet."
     }
 }
+
+
 
 function Import-ChiaAssetId{
     <#
@@ -544,16 +553,20 @@ function Start-TradingBot{
     param(
         [Parameter(Mandatory=$true)]
         $Config,
-        [int16]$QuoteDepth
+        [int16]$QuoteDepth,
+        [string]$SplashEndpoint
     )
     if(-not $QuoteDepth){
         $QuoteDepth = 10
     } 
+
+    
+   
     $xch_wallet_id = 1   # default wallet id for xch
     $usd_wallet_id = Convert-AssetIdToWalletId -AssetId $Config.CatCoinAssetId   # my wallet id for wUSDC.b
     $decimals = 1000000000000
     #asset id for CatCoin used - fa4a180ac326e67ea289b869e3448256f6af05721f7cf934cb9901baa6b7a99d is for wUSDC.b
-    $cat_name = 'wusdcb'
+    $cat_name = $Config.CatCoin
     $cat_tail = $Config.CatCoinAssetId
     
     $Table = Build-TickTable -Config $Config
@@ -561,7 +574,13 @@ function Start-TradingBot{
         $CurrentXch = Get-XCHBallance
         Write-Host "Current XCH Ballance: $CurrentXch"
         $Quotes = Build-QuotesforCurrentXCH -CurrentXch $CurrentXch -Table $Table -QuoteDepth $QuoteDepth
-        New-OffersFromQuotes -Quotes $Quotes
+        
+        if($SplashEndpoint){
+            New-OffersFromQuotes -Quotes $Quotes -PostTo $SplashEndpoint
+        } else {
+            New-OffersFromQuotes -Quotes $Quotes
+        }
+        
         Start-Sleep 60
     }
 }
@@ -761,7 +780,8 @@ Class ChiaOffer{
 
 Function New-OfferFromQuote{
     param(
-        $quote
+        $quote,
+        $SplashEndpoint
     )
     
     $offer = [ChiaOffer]::new()
@@ -778,6 +798,9 @@ Function New-OfferFromQuote{
 
     $offer.createoffer()
     
+    if($SplashEndpoint){
+        $offer.dexie_url = $SplashEndpoint
+    }
     $offer.postToDexie()
     
     return $offer
@@ -839,7 +862,8 @@ Function Get-AllOffers{
 
 function New-OffersFromQuotes{
     param(
-        $Quotes
+        $Quotes,
+        [string]$SplashEndpoint
     )
 
     $CurrentOffers = Get-AllOffers
@@ -848,13 +872,22 @@ function New-OffersFromQuotes{
         if($Quote.type -eq "buy"){
             if(-not ($CurrentOffers | Where-Object {$_.offered_amount -eq $Quote.offered_amount})){
                 Write-Host "Buying for $($Quote.offered_amount)"
-                New-OfferFromQuote -quote $Quote
+                if($SplashEndpoint){
+                    New-OfferFromQuote -quote $Quote -SplashEndpoint $SplashEndpoint
+                } else {
+                    New-OfferFromQuote -quote $Quote 
+                }
+                
             }
         }
         if($quote.type -eq "sell"){
             if(-not ($CurrentOffers | Where-Object {$_.requested_amount -eq $Quote.requested_amount}) ){
                 Write-Host "Selling for $($Quote.requested_amount)"
-                New-OfferFromQuote -quote $Quote
+                if($SplashEndpoint){
+                    New-OfferFromQuote -quote $Quote -SplashEndpoint $SplashEndpoint
+                } else {
+                    New-OfferFromQuote -quote $Quote 
+                }
             }
         }
     }
@@ -874,19 +907,3 @@ function Reset-Offers{
 }
 
 
-
-#$trading_data = Build-TradingGraphFromXCH -starting_xch $starting_xch -current_price $current_price -upper_price $upper_price -lower_price $lower_price
-
-
-#$table = Build-TickTable -num_steps 100 -trading_data $trading_data
-#$current_xch = Get-XCHBallance
-#$quotes = Build-QuotesforCurrentXCH -current_xch $current_xch -table $table
-
-
-new-ChiaSwapConfig -UpperPrice 14.15 -LowerPrice 12.621 -StartingPrice 13.15 -FeePercent 0.006 -CatCoin wUSDC.b -Steps 157 -Force -StartingCatCoin 743.536
-#$config = Get-ChiaSwapConfig
-#Get-LiquidityRequirements -InputType CatCoin -Amount 743.536 -Config $Config
-#$table = Build-TickTable -Config $Config
-#$quotes = Build-QuotesforCurrentXCH -CurrentXch (Get-XCHBallance) -Table $table -QuoteDepth 20
-#$quotes | ft
-#Get-LiquidityRequirements -InputType CatCoin -Amount 743.536 -Config $Config
