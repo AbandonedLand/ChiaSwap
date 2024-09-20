@@ -884,7 +884,16 @@ function New-OffersFromQuotes{
     
 }
 
-
+function Reset-Offers{
+    $Offers = Get-AllOffers
+    foreach($Offer in $Offers){
+        $Json = @{
+            trade_id = $Offer.trade_id
+            fee = 0
+        } | ConvertTo-Json
+        (chia rpc wallet cancel_offer $json) | ConvertFrom-Json
+    }
+}
 
 
 
