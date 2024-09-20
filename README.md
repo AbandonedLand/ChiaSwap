@@ -102,3 +102,8 @@ Run Start-TradingBot with a Config and QuoteDepth.
 ```PowerShell
 Start-TradingBot -Config $Config -QuoteDepth 20
 ```
+
+## Use Splash instead of dexie
+ ```PowerShell
+ Start-TradingBot -Config $config -QuoteDepth 20 -SplashEndpoint http://127.0.0.1:4000 
+ ```
