@@ -13,6 +13,9 @@ This config will set an upper price per xch at $15.50, a Lower price per xch of 
 This will use the Base Wrapped USDC coin and we are starting with 100 XCH as liquidity.
 There will be 100 steps between the highest price and lowest price. 
 
+> [!NOTE]
+> The feePercent is the amount (in CAT) you charge for providing the service.  You will add/remove this fee in (CAT token) from each bid/ask offer.  For example, if your fee was 0.01 you would charge a 1% fee.  If you were selling an amount of XCH for $10.00, your offer would request $10.10 instead of $10.00.   Likewise, if you were buying $10.00 worth of XCH, you would offer $9.90 instead of 10.
+
 **Note: This config is created once, even if the current price changes, this is data is used for the formula for the concentrated liquidity.  Do not keep changing this based on the current price.**
 
 ```PowerShell
@@ -36,7 +39,11 @@ XchRequired     : 100
 ```
 
 ## Step 4 - Determine how to split your coins.
- - Build your trading table
+ Build your trading table
+
+ > [!NOTE]
+ > The fee is what you charge for providing liquidity, not the blockchain fee.
+
  ```PowerShell
  $Table = Build-TickTable -Config $Config
  $Quotes = $quotes = Build-QuotesforCurrentXCH -CurrentXch ($Config.StartingXCH*1000000000000)  -Table $table -QuoteDepth 5
