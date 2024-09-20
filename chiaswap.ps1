@@ -890,6 +890,7 @@ function Reset-Offers{
         $Json = @{
             trade_id = $Offer.trade_id
             fee = 0
+            secure = $true
         } | ConvertTo-Json
         (chia rpc wallet cancel_offer $json) | ConvertFrom-Json
     }
