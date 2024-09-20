@@ -576,7 +576,7 @@ function Start-TradingBot{
         $Quotes = Build-QuotesforCurrentXCH -CurrentXch $CurrentXch -Table $Table -QuoteDepth $QuoteDepth
         
         if($SplashEndpoint){
-            New-OffersFromQuotes -Quotes $Quotes -PostTo $SplashEndpoint
+            New-OffersFromQuotes -Quotes $Quotes -SplashEndpoint $SplashEndpoint
         } else {
             New-OffersFromQuotes -Quotes $Quotes
         }
