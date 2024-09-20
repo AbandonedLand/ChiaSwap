@@ -628,7 +628,6 @@ Class ChiaOffer{
     }
 
     offerednft($nft_id){
-        $data = $this.RPCNFTInfo($nft_id)
         $this.offer.($this.nft_info.launcher_id.substring(2))=-1
     }
 
@@ -722,7 +721,12 @@ Class ChiaOffer{
 
     createoffer(){
         $this.makejson()
-        $this.offertext = chia rpc wallet create_offer_for_ids $this.json
+        try{
+            $this.offertext = chia rpc wallet create_offer_for_ids $this.json
+        } catch {
+            Write-Error "Unable to create offer"
+        }
+        
     }
 
     createofferwithoutjson(){
@@ -730,23 +734,21 @@ Class ChiaOffer{
     }
     
     postToDexie(){
-        $data = $this.offertext | convertfrom-json
-        $body = @{
-            "offer" = $data.offer
-            "claim_rewards" = $true
+        if($this.offertext){
+            $data = $this.offertext | convertfrom-json
+            $body = @{
+                "offer" = $data.offer
+                "claim_rewards" = $true
+            }
+            $contentType = 'application/json' 
+            $json_offer = $body | convertto-json
+            $this.dexie_response = Invoke-WebRequest -Method POST -body $json_offer -Uri $this.dexie_url -ContentType $contentType
+        } else {
+            Write-Error "No offer available to post to dexie."
         }
-        $contentType = 'application/json' 
-        $json_offer = $body | convertto-json
-        $this.dexie_response = Invoke-WebRequest -Method POST -body $json_offer -Uri $this.dexie_url -ContentType $contentType
+        
     }
     
-
-    postToDiscord($content){
-        $payload = [PSCustomObject]@{
-            content = $content
-        }
-    
-    }
 
     RPCNFTInfo($nft_id){
         $this.nft_info = (chia rpc wallet nft_get_info ([ordered]@{coin_id=$nft_id} | ConvertTo-Json) | Convertfrom-json).nft_info
@@ -816,6 +818,7 @@ Function Show-OfferDetails{
         $requested_amount = $trading_data.summary.requested.($cat_tail) / 1000
         $offered_coin = 'xch'
         $offered_amount = $trading_data.summary.offered.xch / 1000000000000
+        $trade_id = $trading_data.trade_id
     }
 
     if($trading_data.summary.requested.xch){
@@ -823,6 +826,7 @@ Function Show-OfferDetails{
         $requested_amount = $trading_data.summary.requested.xch / 1000000000000
         $offered_coin = $cat_name
         $offered_amount = $trading_data.summary.offered.($cat_tail) / 1000
+        $trade_id = $trading_data.trade_id
     }
 
 
@@ -832,6 +836,7 @@ Function Show-OfferDetails{
         requested_amount = $requested_amount
         offered_coin = $offered_coin
         offered_amount = $offered_amount
+        trade_id = $trade_id
     }
 
 }
@@ -842,7 +847,7 @@ Function Show-OfferDetails{
 Function Get-AllOffers{
     $Json = @{
         start=0
-        end=100
+        end=500
     } | ConvertTo-Json
     $Offers = (chia rpc wallet get_all_offers $Json | convertfrom-json).trade_records
     $Result = @()
