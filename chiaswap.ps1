@@ -895,9 +895,14 @@ function New-OffersFromQuotes{
 }
 
 function Reset-Offers{
-    $Offers = (chia rpc wallet get_all_offers | ConvertFrom-Json).trade_records
+    $Json = @{
+        start=0
+        end=100
+    } | ConvertTo-Json
+    $Offers = (chia rpc wallet get_all_offers $Json | ConvertFrom-Json).trade_records
     foreach($Offer in $Offers){
         $Json = @{
+
             trade_id = $Offer.trade_id
             fee = 0
             secure = $true
