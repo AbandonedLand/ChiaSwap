@@ -590,7 +590,7 @@ function Start-TradingBot{
 
 function Get-XCHBallance{
     $json = @{
-        wallet_id = $xch_wallet_id 
+        wallet_id = 1
     } | ConvertTo-Json
     $starting_xch = (chia rpc wallet get_wallet_balance $json | Convertfrom-json).wallet_balance.confirmed_wallet_balance
     return $starting_xch
