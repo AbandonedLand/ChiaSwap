@@ -895,7 +895,7 @@ function New-OffersFromQuotes{
 }
 
 function Reset-Offers{
-    $Offers = Get-AllOffers
+    $Offers = (chia rpc wallet get_all_offers | ConvertFrom-Json)
     foreach($Offer in $Offers){
         $Json = @{
             trade_id = $Offer.trade_id
