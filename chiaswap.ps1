@@ -483,7 +483,7 @@ Function Build-TickTable{
             newyr=$new_yr
             xch_amount = $max_step_size
             usd_amount = ([decimal]::round(($yr - $new_yr)/$decimals,3))
-            fee_amount = ([decimal]::round((($yr - $new_yr)/$decimals)*$fee_percent,3))
+            fee_amount = ([decimal]::round((($yr - $new_yr)/$decimals)*$Config.FeePercent,3))
             
         }
         $quotes += $row
