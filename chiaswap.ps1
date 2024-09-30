@@ -514,7 +514,7 @@ Function Build-QuotesforCurrentXCH{
     $quotes = @()
 
     foreach($sell in $sell_table){
-        $offered_amount = (($sell.xch_amount-($sell.usd_amount*1000))/$decimals)
+        $offered_amount = (($sell.xch_amount-(Get-Random -Minimum 1 -Maximum 50000))/$decimals)
         $quote = [pscustomobject]@{
             type = 'sell'
             amm_offered_amount = $sell.usd_amount
@@ -529,7 +529,7 @@ Function Build-QuotesforCurrentXCH{
     
     foreach($buy in $buy_table){
 
-        $requested_amount = (($buy.xch_amount+($buy.usd_amount*1000))/$decimals)
+        $requested_amount = (($buy.xch_amount+(Get-Random -Minimum 1 -Maximum 50000))/$decimals)
 
         $quote = [pscustomobject]@{
             type = 'buy'
