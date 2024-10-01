@@ -561,8 +561,8 @@ Function Build-QuotesforCurrentCAT{
         $QuoteDepth = 10
     } 
     $Decimals = 1000000000000
-    $sell_table = $Table | Where-Object {$_.newyr -lt $CurrentCAT} | Sort-Object {$_.start} -Descending | Select-Object -First $QuoteDepth
-    $buy_table = $Table | Where-Object {$_.newyr -gt $CurrentCat} | Sort-Object {$_.loop} | Select-Object -First $QuoteDepth
+    $sell_table = $Table | Where-Object {$_.newyr -gt $CurrentCAT} | Sort-Object {$_.start} -Descending | Select-Object -First $QuoteDepth
+    $buy_table = $Table | Where-Object {$_.newyr -lt $CurrentCat} | Sort-Object {$_.loop} | Select-Object -First $QuoteDepth
 
     
     $quotes = @()
