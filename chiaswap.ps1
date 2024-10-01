@@ -627,9 +627,13 @@ function Start-TradingBot{
     $Table = Build-TickTable -Config $Config
     while($true){
         $CurrentXch = Get-XCHBallance
+        if($UseCats.IsPresent){
+            $CurrentCAT = Get-CatBallance
+            Write-Host "Current CAT Ballance: $CurrentCAT"
+        }
         Write-Host "Current XCH Ballance: $CurrentXch"
         if($UseCats.IsPresent){
-            $Quotes = Build-QuotesforCurrentCAT -CurrentCAT (Get-CatBallance) -Table $Table -QuoteDepth $QuoteDepth
+            $Quotes = Build-QuotesforCurrentCAT -CurrentCAT $CurrentCAT -Table $Table -QuoteDepth $QuoteDepth
         } else {
             $Quotes = Build-QuotesforCurrentXCH -CurrentXch $CurrentXch -Table $Table -QuoteDepth $QuoteDepth
         }
