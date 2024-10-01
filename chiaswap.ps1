@@ -549,6 +549,60 @@ Function Build-QuotesforCurrentXCH{
 }
 
 
+Function Build-QuotesforCurrentCAT{
+    param(
+        [Parameter(Mandatory=$true)]
+        $CurrentCAT,
+        [Parameter(Mandatory=$true)]
+        $Table,
+        [int16]$QuoteDepth
+    )
+    if(-not $QuoteDepth){
+        $QuoteDepth = 10
+    } 
+    $Decimals = 1000000000000
+    $sell_table = $Table | Where-Object {$_.newyr -lt $CurrentCAT} | Sort-Object {$_.start} -Descending | Select-Object -First $QuoteDepth
+    $buy_table = $Table | Where-Object {$_.newyr -gt $CurrentCat} | Sort-Object {$_.loop} | Select-Object -First $QuoteDepth
+
+    
+    $quotes = @()
+
+    foreach($sell in $sell_table){
+        $offered_amount = (($sell.xch_amount-(Get-Random -Minimum 1 -Maximum 50000))/$decimals)
+        $quote = [pscustomobject]@{
+            type = 'sell'
+            amm_offered_amount = $sell.usd_amount
+            fee = $sell.fee_amount
+            offered_amount = $offered_amount
+            requested_amount = ($sell.usd_amount+$sell.fee_amount) 
+            amm_price_per_xch = [decimal]::round(($sell.usd_amount/($sell.xch_amount/$decimals)),3)
+            final_price_per_xch = [decimal]::round((($sell.usd_amount+$sell.fee_amount) / $offered_amount),3)
+        }
+        $quotes += $quote
+    }
+    
+    foreach($buy in $buy_table){
+
+        $requested_amount = (($buy.xch_amount+(Get-Random -Minimum 1 -Maximum 50000))/$decimals)
+
+        $quote = [pscustomobject]@{
+            type = 'buy'
+            amm_offered_amount = $buy.usd_amount
+            fee = $buy.fee_amount
+            offered_amount = ($buy.usd_amount - $buy.fee_amount)
+            requested_amount = $requested_amount
+            amm_price_per_xch = [decimal]::round(($buy.usd_amount / ($buy.xch_amount/$decimals)),3)
+            final_price_per_xch = [decimal]::round((($buy.usd_amount - $buy.fee_amount) / $requested_amount),3)
+        }
+        $quotes += $quote
+    }
+    
+    $quotes
+
+    
+}
+
+
 function Start-TradingBot{
     param(
         [Parameter(Mandatory=$true)]
@@ -591,6 +645,14 @@ function Start-TradingBot{
 function Get-XCHBallance{
     $json = @{
         wallet_id = 1
+    } | ConvertTo-Json
+    $starting_xch = (chia rpc wallet get_wallet_balance $json | Convertfrom-json).wallet_balance.confirmed_wallet_balance
+    return $starting_xch
+}
+
+function Get-CatBallance{
+    $json = @{
+        wallet_id = (Convert-AssetIdToWalletId -AssetId $Config.CatCoinAssetId)
     } | ConvertTo-Json
     $starting_xch = (chia rpc wallet get_wallet_balance $json | Convertfrom-json).wallet_balance.confirmed_wallet_balance
     return $starting_xch
