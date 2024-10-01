@@ -664,7 +664,7 @@ function Get-CatBallance{
     $json = @{
         wallet_id = (Convert-AssetIdToWalletId -AssetId $Config.CatCoinAssetId)
     } | ConvertTo-Json
-    $starting_xch = (chia rpc wallet get_wallet_balance $json | Convertfrom-json).wallet_balance.confirmed_wallet_balance
+    $starting_xch = ((chia rpc wallet get_wallet_balance $json | Convertfrom-json).wallet_balance.confirmed_wallet_balance*1000000000000)
     return $starting_xch
 }
 
