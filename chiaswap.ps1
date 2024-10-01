@@ -608,7 +608,8 @@ function Start-TradingBot{
         [Parameter(Mandatory=$true)]
         $Config,
         [int16]$QuoteDepth,
-        [string]$SplashEndpoint
+        [string]$SplashEndpoint,
+        [switch]$UseCats
     )
     if(-not $QuoteDepth){
         $QuoteDepth = 10
@@ -627,7 +628,12 @@ function Start-TradingBot{
     while($true){
         $CurrentXch = Get-XCHBallance
         Write-Host "Current XCH Ballance: $CurrentXch"
-        $Quotes = Build-QuotesforCurrentXCH -CurrentXch $CurrentXch -Table $Table -QuoteDepth $QuoteDepth
+        if($UseCats.IsPresent){
+            $Quotes = Build-QuotesforCurrentCAT -CurrentCAT (Get-CatBallance) -Table $Table -QuoteDepth $QuoteDepth
+        } else {
+            $Quotes = Build-QuotesforCurrentXCH -CurrentXch $CurrentXch -Table $Table -QuoteDepth $QuoteDepth
+        }
+        
         
         if($SplashEndpoint){
             New-OffersFromQuotes -Quotes $Quotes -SplashEndpoint $SplashEndpoint
