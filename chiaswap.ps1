@@ -507,7 +507,7 @@ Function Build-QuotesforCurrentXCH{
         $QuoteDepth = 10
     } 
     $Decimals = 1000000000000
-    $sell_table = $Table | Where-Object {$_.start -lt $CurrentXch} | Sort-Object {$_.start} -Descending | Select-Object -First $QuoteDepth
+    $sell_table = $Table | Where-Object {$_.start -lt $CurrentXch} | Sort-Object {$_.start} | Select-Object -First $QuoteDepth
     $buy_table = $Table | Where-Object {$_.start -gt $CurrentXch} | Sort-Object {$_.loop} | Select-Object -First $QuoteDepth
 
     
@@ -561,7 +561,7 @@ Function Build-QuotesforCurrentCAT{
         $QuoteDepth = 10
     } 
     $Decimals = 1000000000000
-    $sell_table = $Table | Where-Object {$_.newyr -gt $CurrentCAT} | Sort-Object {$_.start} -Descending | Select-Object -First $QuoteDepth
+    $sell_table = $Table | Where-Object {$_.newyr -gt $CurrentCAT} | Sort-Object {$_.start}  | Select-Object -First $QuoteDepth
     $buy_table = $Table | Where-Object {$_.newyr -lt $CurrentCat} | Sort-Object {$_.loop} | Select-Object -First $QuoteDepth
 
     
@@ -645,7 +645,7 @@ function Start-TradingBot{
             New-OffersFromQuotes -Quotes $Quotes
         }
         
-        Start-Sleep 60
+        Start-Sleep 100
     }
 }
 
